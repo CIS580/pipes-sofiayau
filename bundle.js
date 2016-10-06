@@ -3,20 +3,78 @@
 
 /* Classes */
 const Game = require('./game');
+const Pipe = require('./pipe');
 
 /* Global variables */
 var canvas = document.getElementById('screen');
 var game = new Game(canvas, update, render);
 var image = new Image();
 image.src = 'assets/pipes.png';
+var backgroundMusic = new Audio();
+backgroundMusic.src = 'assets/backgroundMusic.mp3'
+var connect = new Audio();
+connect.src = 'assets/connect.wav';
+var disconnect = new Audio();
+disconnect.src = 'assets/disconnect.wav';
+var win = new Audio();
+win.src = "assets/win.wav";
+var lose = new Audio();
+lose.src = "assets/lose.wav";
 
-// TODO: Place the pipe tiles on the board in random order
+var score = 0;
+var level = 1;
+var state = "waiting for connect";
 
+var startPipe = new Pipe({x:10, y:79},'assets/startPipe.png',0);
+var endPipe = new Pipe({x: canvas.width - 50, y:79},'assets/endPipe.png',0);
+var currentPipe = new Pipe({x: 10 ,y:10},'assets/pipes.png',0);
+
+var pipes = [];
+currentPipe.start = true;
+
+var rotateX, rotateY;
+var startX, startY;
+var currentX, currentY, currentIndex;
+
+backgroundMusic.play();
+
+//left-clicking
 canvas.onclick = function(event) {
   event.preventDefault();
-  // TODO: determine which pipe tile was clicked on
-  // TODO: rotate the pipes in the pipe tile
+  var x = Math.floor((event.clientX + 3)/75);
+  var y = Math.floor((event.clientY + 3)/75);
+  currentX = event.offsetX;
+  currentY = event.offsetY;
+
+  var tempX = x * 75 + 8;
+  var tempY = y * 75 + 8;
+  switch(state){
+    case "waiting for connect":
+      pipes.forEach(function(pipes){
+        if(pipes.x == tempX && pipes.y == tempY){
+          state = 'disconnected';
+        }
+      });
+      case "connected":
+        backgroundMusic.pause();
+        connect.play();
+        currentPipe.x = tempX;
+        currentPipe.y = tempY;
+        pipes.push(new Pipe({
+          x:currentPipe.x,
+          y:currentPipe.y
+        },'assets/curvePipe.png',0));
+        score += 100;
+        //level ++;
+
+    }
+
+  // TODO: Place or rotate pipe tile
 }
+
+
+//Right-clicking
+canvas.oncontext
 
 /**
  * @function masterLoop
@@ -53,12 +111,26 @@ function update(elapsedTime) {
 function render(elapsedTime, ctx) {
   ctx.fillStyle = "#777777";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
+  for(var y =0; y < 12; y++){
+    for(var x = 0; x < 16; x++){
+      ctx.fillStyle = "lightblue";
+      ctx.fillRect(x * 75 + 3, y * 75 + 3, 69,69);
+    }
+  }
+  ctx.fillStyle = "black";
+  ctx.fillText("Score:"+score, 100,20);
+  ctx.fillText("Level:"+level, 10, 20);
 
   // TODO: Render the board
-
+  startPipe.render(elapsedTime,ctx);
+  endPipe.render(elapsedTime, ctx);
+  currentPipe.render(elapsedTime, ctx);
+  pipes.forEach(function(pipe){
+    pipe.render(elapsedTime,ctx);
+  });
 }
 
-},{"./game":2}],2:[function(require,module,exports){
+},{"./game":2,"./pipe":3}],2:[function(require,module,exports){
 "use strict";
 
 /**
@@ -115,5 +187,62 @@ Game.prototype.loop = function(newTime) {
   // Flip the back buffer
   this.frontCtx.drawImage(this.backBuffer, 0, 0);
 }
+
+},{}],3:[function(require,module,exports){
+"use strict";
+
+const MS_PER_FRAME = 1000/8;
+
+/**
+ * @module exports the Pipe class
+ */
+module.exports = exports = Pipe;
+/**
+ * @constructor Pipe
+ * Creates a new pipe object
+ * @param {Postition} position object specifying an x and y
+ */
+ function Pipe(position, spritesheet,frames){
+  this.x = position.x;
+  this.y = position.y;
+  this.width  = 64;
+  this.height = 64;
+  this.spritesheet  = new Image();
+  this.spritesheet.src = encodeURI('assets/pipes.png');
+  this.timer = 0;
+  this.frame = frames;
+
+  var self = this;
+  var speed = 1/16/1000;
+
+  this.rotate = true;
+  this.translate = false;
+  this.start = false;
+  this.end = false;
+}
+
+/**
+ * @function updates the pipe object
+ * {DOMHighResTimeStamp} time the elapsed time since the last frame
+ */
+Pipe.prototype.update = function(time) {
+
+}
+
+/**
+ * @function renders the pipe into the provided context
+ * {DOMHighResTimeStamp} time the elapsed time since the last frame
+ * {CanvasRenderingContext2D} ctx the context to render into
+ */
+ Pipe.prototype.render = function(time, ctx) {
+      ctx.drawImage(
+        // image
+        this.spritesheet,
+        // source rectangle
+        this.frame * 64, 0, this.width, this.height,
+        // destination rectangle
+        this.x, this.y, this.width, this.height
+    );
+  }
 
 },{}]},{},[1]);
