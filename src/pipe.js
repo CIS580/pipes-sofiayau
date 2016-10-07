@@ -11,15 +11,16 @@ module.exports = exports = Pipe;
  * Creates a new pipe object
  * @param {Postition} position object specifying an x and y
  */
- function Pipe(position, spritesheet,frames){
+ function Pipe(position, image, frames){
   this.x = position.x;
   this.y = position.y;
   this.width  = 64;
   this.height = 64;
   this.spritesheet  = new Image();
-  this.spritesheet.src = encodeURI('assets/pipes.png');
+  this.spritesheet.src = encodeURI(image);
   this.timer = 0;
   this.frame = frames;
+  //this.rotation = Math.PI /4;
 
   var self = this;
   var speed = 1/16/1000;

@@ -26,8 +26,8 @@ var level = 1;
 var state = "waiting for connect";
 
 var startPipe = new Pipe({x:10, y:79},'assets/startPipe.png',0);
-var endPipe = new Pipe({x: canvas.width - 50, y:79},'assets/endPipe.png',0);
-var currentPipe = new Pipe({x: 10 ,y:10},'assets/pipes.png',0);
+var endPipe = new Pipe({x:600, y:79},'assets/cornerPipe.png',0);
+var currentPipe = new Pipe({x: 10 ,y:10},'assets/cornerpipe.png',0);
 
 var pipes = [];
 currentPipe.start = true;
@@ -52,6 +52,7 @@ canvas.onclick = function(event) {
     case "waiting for connect":
       pipes.forEach(function(pipes){
         if(pipes.x == tempX && pipes.y == tempY){
+          disconnect.play();
           state = 'disconnected';
         }
       });
@@ -65,7 +66,7 @@ canvas.onclick = function(event) {
           y:currentPipe.y
         },'assets/curvePipe.png',0));
         score += 100;
-        //level ++;
+        level += 1;
 
     }
 
@@ -74,7 +75,26 @@ canvas.onclick = function(event) {
 
 
 //Right-clicking
-canvas.oncontext
+canvas.oncontextmenu = function(event){
+  event.preventDefault();
+  var x = Math.floor((event.clientX + 3)/75);
+  var y = Math.floor((event.clientY + 3)/75);
+  rotateX = x * 75 + 6;
+  rotateY = y * 75 +6;
+  pipes.forEach(function(pipes){
+    if(pipes.x == rotateX && pipes.y == rotateY){
+      state = 'connected';
+      backgroundMusic.pause();
+      connect.play();
+      pipes.frame = 0;
+    }
+    else {
+      backgroundMusic.pause();
+      connect.play();
+      pipes.frame += 1;
+    }
+  });
+}
 
 /**
  * @function masterLoop
@@ -202,21 +222,22 @@ module.exports = exports = Pipe;
  * Creates a new pipe object
  * @param {Postition} position object specifying an x and y
  */
- function Pipe(position, spritesheet,frames){
+ function Pipe(position, image, frames){
   this.x = position.x;
   this.y = position.y;
   this.width  = 64;
   this.height = 64;
   this.spritesheet  = new Image();
-  this.spritesheet.src = encodeURI('assets/pipes.png');
+  this.spritesheet.src = encodeURI(image);
   this.timer = 0;
   this.frame = frames;
+  //this.rotation = Math.PI /4;
 
   var self = this;
   var speed = 1/16/1000;
 
   this.rotate = true;
-  this.translate = false;
+  this.curve = false;
   this.start = false;
   this.end = false;
 }
